@@ -11,6 +11,8 @@ var fs = require('fs')
   , extname = require('path').extname
   , resolve = require('path').resolve
   , join = require('path').join
+  , sep = require('path').sep
+  , mkdirp = require('mkdirp')
   , isWindows = process.platform === 'win32';
 
 /**
@@ -694,16 +696,25 @@ function compileFile(file) {
  * Write the given CSS output.
  */
 
+RegExp.escape= function(s) {
+    return s.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+};
+
 function createPath(file, sourceMap) {
-  var out;
+  var out, sharedpath;
   if (files.length === 1 && isCSS(dest)) {
     return [dest, sourceMap ? '.map' : ''].join('');
   }
   // --out support
   out = [basename(file, extname(file)), sourceMap ? '.css.map' : '.css'].join('');
-  return dest
-    ? join(dest, out)
-    : join(dirname(file), out);
+  if (dest) {
+    sharedpath = file.replace(new RegExp('^' + RegExp.escape(files[0]) + sep, 'i'), '');
+    mkdirp.sync(dirname(join(dest, sharedpath)));
+    return join(dest, sharedpath);
+  }
+  else {
+    return join(dirname(file), out);
+  }
 }
 
 /**
