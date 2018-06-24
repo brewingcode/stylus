@@ -678,6 +678,13 @@ function compileFile(file) {
         }).map(function(path){
           return join(file, path);
         }).forEach(compileFile);
+        // recurse into directories
+        // note: funny symlinking might cause infinite loops
+        files.filter(function(path) {
+          return fs.statSync(join(file,path)).isDirectory();
+        }).map(function(path) {
+          return join(file, path);
+        }).forEach(compileFile)
       });
     }
   });
